@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Detalhes do Usuário</h2>
+    
+    <div class="mb-6 p-4 border border-gray-300 rounded-md bg-gray-50">
+        <p class="mb-2"><strong class="text-gray-700">Nome Completo:</strong> {{ target_user.get_full_name }}</p>
+        <p class="mb-2"><strong class="text-gray-700">CPF:</strong> {{ target_user.cpf }}</p>
+        <p class="mb-2"><strong class="text-gray-700">Tipo de Usuário:</strong> {{ target_user.get_user_type_display }}</p>
+        {% if target_user.professional_registration %}
+            <p class="mb-2"><strong class="text-gray-700">Registro Profissional:</strong> {{ target_user.professional_registration }}</p>
+        {% endif %}
+        {% if target_user.health_unit %}
+            <p class="mb-2"><strong class="text-gray-700">Unidade de Saúde:</strong> {{ target_user.health_unit.name }}</p>
+        {% else %}
+            <p class="mb-2"><strong class="text-gray-700">Unidade de Saúde:</strong> Não Atribuída</p>
+        {% endif %}
+        <p class="mb-2"><strong class="text-gray-700">Membro Desde:</strong> {{ target_user.date_joined|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Atualizar Usuário</h3>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="PUT"> {# Campo oculto para simular PUT #}
+        
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                {% if field.field.widget.input_type == 'select' %}
+                    <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" {% if field.field.disabled %}disabled{% endif %}>
+                        {% for option_value, option_label in field.field.choices %}
+                            <option value="{{ option_value }}" {% if field.value == option_value %}selected{% endif %}>{{ option_label }}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{% if field.value %}{{ field.value }}{% endif %}">
+                {% endif %}
+                
+                {% if field.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ field.errors.as_text }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 font-semibold transition">
+            Atualizar Usuário
+        </button>
+    </form>
+    
+    <h3 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Excluir Usuário</h3>
+    <form method="post" class="space-y-4" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação é irreversível.');">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="DELETE"> {# Campo oculto para simular DELETE #}
+        {% if request.user == target_user %}
+            <p class="text-red-600">Você não pode excluir sua própria conta por aqui.</p>
+        {% else %}
+            <button type="submit" class="w-full bg-red-600 text-white py-3 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-semibold transition">
+                Excluir Usuário
+            </button>
+        {% endif %}
+    </form>
+
+    {% if form.non_field_errors %}
+        <div class="mt-4 text-sm text-red-600">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
